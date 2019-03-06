@@ -49,7 +49,9 @@ If you want to use motion controller in task space, then you may choose this con
         - You need to specify the goal for the robot to move there by publishing the goal location to          
         /elfin/controller_name/command topic
         
-        - We have already made a trajectory publisher that publish a trajectory in y-axis to the metioned topic. Run
+        - We have already made a trajectory publisher that publish a trajectory in y-axis to the mentioned topic.
+        $ cd ~/catkin_ws/src
+        $ git clone https://github.com/trannguyenle95/trajectory.git
         $ rosrun trajectory trajectory 
         Robot should move now !!
         
