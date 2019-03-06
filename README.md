@@ -72,11 +72,14 @@ If you want to use motion and force controller in task space, then you may choos
                        /elfin/force_controller/force_gains/data[3] (Refernce force value)
                 You can simply change it using rostopic pub or using rqt_ez_publisher
                 $ rosrun rqt_ez_publisher rqt_ez_publisher    
+           
 ### Tip
- If you face the problems such as robot collapses, robot behaves weird when it touch the table (force-related controller),    please do
+ If you face the problems such as robot collapses, robot behaves weird when it touch the table (force-related controller),    please do:
+ 
     $ cd ~/catkin_ws
     $ catkin_make clean
-    $ catkin_m
+    $ catkin_make
+    
 ## Reference
 1. [ros-control](http://wiki.ros.org/ros_control)
 2. [Write a new ros-controller](https://github.com/ros-controls/ros_control/wiki/controller_interface)
