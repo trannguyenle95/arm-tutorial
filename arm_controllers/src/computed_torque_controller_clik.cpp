@@ -1,4 +1,4 @@
-// from ros-control meta packages
+﻿// from ros-control meta packages
 #include <controller_interface/controller.h>
 #include <hardware_interface/joint_command_interface.h>
 
@@ -40,10 +40,10 @@ namespace arm_controllers
 {
 class Computed_Torque_Controller_CLIK : public controller_interface::Controller<hardware_interface::EffortJointInterface>
 {
-  public:
+public:
     bool init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n)
     {
-        // ********* 1. Get joint name / gain from the parameter server *********
+        // ********* 1.  joint name / gain from the parameter server *********
         // 1.0 Control objective & Inverse Kinematics mode
         if (!n.getParam("ctr_obj", ctr_obj_))
         {
@@ -274,26 +274,26 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // 6.2 subsriber
         sub_x_cmd_ = n.subscribe<std_msgs::Float64MultiArray>("command", 1, &Computed_Torque_Controller_CLIK::commandCB, this);
         event = 0; // subscribe 받기 전: 0
-                   // subscribe 받은 후: 1
+        // subscribe 받은 후: 1
 
         return true;
     }
 
     void commandCB(const std_msgs::Float64MultiArrayConstPtr &msg)
     {
-        if (msg->data.size() != num_taskspace)
+        if (msg->data.size() != 3*num_taskspace)
         {
             ROS_ERROR_STREAM("Dimension of command (" << msg->data.size() << ") does not match DOF of Task Space (" << 2 << ")! Not executing!");
             return;
         }
 
-        for (int i = 0; i < num_taskspace; i++)
+        for (int i = 0; i < 3*num_taskspace; i++)
         {
             x_cmd_(i) = msg->data[i];
         }
 
-        event = 1; // subscribe 받기 전: 0
-                   // subscribe 받은 후: 1
+        event = 1; // subscribe 받기 전(Before receiving): 0
+        // subscribe 받은 후(after receiving): 1
     }
 
     void starting(const ros::Time &time)
@@ -332,6 +332,20 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
                 xd_.p(1) = -0.32;
                 xd_.p(2) = 0.56;
                 xd_.M = KDL::Rotation(KDL::Rotation::RPY(0, 0, 0));
+
+                xd_dot_(0) = 0;
+                xd_dot_(1) = 0;
+                xd_dot_(2) = 0;
+                xd_dot_(3) = 0;
+                xd_dot_(4) = 0;
+                xd_dot_(5) = 0;
+
+                xd_ddot_(0) = 0;
+                xd_ddot_(1) = 0;
+                xd_ddot_(2) = 0;
+                xd_ddot_(3) = 0;
+                xd_ddot_(4) = 0;
+                xd_ddot_(5) = 0;
             }
             else if (event == 1) // command from ros subscriber
             {
@@ -339,21 +353,22 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
                 xd_.p(1) = x_cmd_(1);
                 xd_.p(2) = x_cmd_(2);
                 xd_.M = KDL::Rotation(KDL::Rotation::RPY(x_cmd_(3), x_cmd_(4), x_cmd_(5)));
+
+                xd_dot_(0) = x_cmd_(6);
+                xd_dot_(1) = x_cmd_(7);
+                xd_dot_(2) = x_cmd_(8);
+                xd_dot_(3) = 0;
+                xd_dot_(4) = 0;
+                xd_dot_(5) = 0;
+
+                xd_ddot_(0) = x_cmd_(9);
+                xd_ddot_(1) = x_cmd_(10);
+                xd_ddot_(2) = x_cmd_(11);
+                xd_ddot_(3) = 0;
+                xd_ddot_(4) = 0;
+                xd_ddot_(5) = 0;
             }
 
-            xd_dot_(0) = 0;
-            xd_dot_(1) = 0;
-            xd_dot_(2) = 0;
-            xd_dot_(3) = 0;
-            xd_dot_(4) = 0;
-            xd_dot_(5) = 0;
-
-            xd_ddot_(0) = 0;
-            xd_ddot_(1) = 0;
-            xd_ddot_(2) = 0;
-            xd_ddot_(3) = 0;
-            xd_ddot_(4) = 0;
-            xd_ddot_(5) = 0;
         }
         else if (ctr_obj_ == 2)
         {
@@ -440,7 +455,7 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // *** 3.1 Error Definition in Joint Space ***
         e_.data = qd_.data - q_.data;
         e_dot_.data = qd_dot_.data - qdot_.data;
-        e_int_.data = qd_.data - q_.data; // (To do: e_int 업데이트 필요요)
+        e_int_.data = qd_.data - q_.data; // (To do: e_int 업데이트 필요요 (Update required))
 
         // *** 3.2 Compute model(M,C,G) ***
         id_solver_->JntToMass(q_, M_);
@@ -449,7 +464,7 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
 
         // *** 3.3 Apply Torque Command to Actuator ***
         aux_d_.data = M_.data * (qd_ddot_.data + Kp_.data.cwiseProduct(e_.data) + Kd_.data.cwiseProduct(e_dot_.data));
-        comp_d_.data = C_.data + G_.data;
+        comp_d_.data = C_.data + G_.data; //(n(q,q_dot))
         tau_d_.data = aux_d_.data + comp_d_.data;
 
         for (int i = 0; i < n_joints_; i++)
@@ -473,7 +488,8 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
     {
         // // 1
         // // Simulation time (unit: sec)
-        // SaveData_[0] = t;
+
+        SaveData_[0] = t;
 
         // // Desired position in joint space (unit: rad)
         // SaveData_[1] = qd_(0);
@@ -539,21 +555,21 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // SaveData_[47] = e_int_(4);
         // SaveData_[48] = e_int_(5);
 
-        // // Desired position in task space (unit: m)
-        // SaveData_[49] = xd_(0);
-        // SaveData_[50] = xd_(1);
-        // SaveData_[51] = xd_(2);
-        // SaveData_[52] = xd_(3);
-        // SaveData_[53] = xd_(4);
-        // SaveData_[54] = xd_(5);
+        // Desired position in task space (unit: m)
+        SaveData_[49] = xd_.p(0);
+        SaveData_[50] = xd_.p(1);
+        SaveData_[51] = xd_.p(2);
+        //         SaveData_[52] = xd_.p(3);
+        //         SaveData_[53] = xd_.p(4);
+        //         SaveData_[54] = xd_.p(5);
 
-        // // Desired velocity in task space (unit: m/s)
-        // SaveData_[55] = xd_dot_(0);
-        // SaveData_[56] = xd_dot_(1);
-        // SaveData_[57] = xd_dot_(2);
-        // SaveData_[58] = xd_dot_(3);
-        // SaveData_[59] = xd_dot_(4);
-        // SaveData_[60] = xd_dot_(5);
+        // Desired velocity in task space (unit: m/s)
+        SaveData_[55] = xd_dot_(0);
+        SaveData_[56] = xd_dot_(1);
+        SaveData_[57] = xd_dot_(2);
+        //         SaveData_[58] = xd_dot_(3);
+        //         SaveData_[59] = xd_dot_(4);
+        //         SaveData_[60] = xd_dot_(5);
 
         // // Desired acceleration in task space (unit: m/s^2)
         // SaveData_[61] = xd_ddot_(0);
@@ -563,21 +579,21 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // SaveData_[65] = xd_ddot_(4);
         // SaveData_[66] = xd_ddot_(5);
 
-        // // Actual position in task space (unit: m)
-        // SaveData_[67] = x_(0);
-        // SaveData_[68] = x_(1);
-        // SaveData_[69] = x_(0);
-        // SaveData_[70] = x_(1);
-        // SaveData_[71] = x_(0);
-        // SaveData_[72] = x_(1);
+        // Actual position in task space (unit: m)
+        SaveData_[67] = x_.p(0);
+        SaveData_[68] = x_.p(1);
+        SaveData_[69] = x_.p(2);
+        //         SaveData_[70] = x_.p(3);
+        //         SaveData_[71] = x_.p(4);
+        //         SaveData_[72] = x_.p(5);
 
-        // // Actual velocity in task space (unit: m/s)
-        // SaveData_[73] = xdot_(0);
-        // SaveData_[74] = xdot_(1);
-        // SaveData_[75] = xdot_(2);
-        // SaveData_[76] = xdot_(3);
-        // SaveData_[77] = xdot_(4);
-        // SaveData_[78] = xdot_(5);
+        // Actual velocity in task space (unit: m/s)
+        SaveData_[73] = xdot_(0);
+        SaveData_[74] = xdot_(1);
+        SaveData_[75] = xdot_(2);
+        //         SaveData_[76] = xdot_(3);
+        //         SaveData_[77] = xdot_(4);
+        //         SaveData_[78] = xdot_(5);
 
         // // Error position in task space (unit: m)
         // SaveData_[79] = ex_(0);
@@ -612,7 +628,7 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // msg_x_.data.clear();
         // msg_ex_.data.clear();
 
-        // msg_SaveData_.data.clear();
+        msg_SaveData_.data.clear();
 
         // // 3
         // for (int i = 0; i < n_joints_; i++)
@@ -629,10 +645,10 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         //     msg_ex_.data.push_back(ex_(i));
         // }
 
-        // for (int i = 0; i < SaveDataMax; i++)
-        // {
-        //     msg_SaveData_.data.push_back(SaveData_[i]);
-        // }
+        for (int i = 0; i < SaveDataMax; i++)
+        {
+            msg_SaveData_.data.push_back(SaveData_[i]);
+        }
 
         // // 4
         // pub_qd_.publish(msg_qd_);
@@ -643,7 +659,7 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         // pub_x_.publish(msg_x_);
         // pub_ex_.publish(msg_ex_);
 
-        // pub_SaveData_.publish(msg_SaveData_);
+        pub_SaveData_.publish(msg_SaveData_);
     }
 
     void print_state()
@@ -789,7 +805,7 @@ class Computed_Torque_Controller_CLIK : public controller_interface::Controller<
         count++;
     }
 
-  private:
+private:
     // others
     double t;
     int ctr_obj_;

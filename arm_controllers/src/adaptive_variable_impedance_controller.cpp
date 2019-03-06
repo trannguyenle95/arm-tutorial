@@ -343,6 +343,7 @@ namespace arm_controllers{
 			else if (total_time_ >= 28.0 && total_time_ < 48.0)
 			{
 				task_contactspace();
+
 			}
 			else if (total_time_ >= 48.0 && total_time_ < 49.0)
 			{
@@ -681,7 +682,12 @@ namespace arm_controllers{
 
 		ros::Publisher pub_SaveData_;
 
-		std_msgs::Float64MultiArray msg_SaveData_;			
+                std_msgs::Float64MultiArray msg_SaveData_;
+
+                boost::scoped_ptr<KDL::ChainFkSolverPos_recursive> fk_pos_solver_; //Solver to compute the forward kinematics (position)
+                KDL::Frame x_;
+
+
 	};
 }
 

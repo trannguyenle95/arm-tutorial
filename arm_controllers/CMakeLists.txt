@@ -42,6 +42,10 @@ add_library(${PROJECT_NAME}
   src/computed_torque_controller_clik.cpp
   src/adaptive_variable_impedance_controller.cpp
   src/passivity_controller.cpp
+  src/admittance_controller.cpp
+  src/force_controller.cpp
+  src/motion_control.cpp
+  src/test.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

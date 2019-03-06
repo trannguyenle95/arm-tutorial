@@ -24,7 +24,25 @@
     </description>
   </class>
 
+  <class name="arm_controllers/motion_control" type="arm_controllers::motion_control" base_class_type="controller_interface::ControllerBase">
+    <description>
+	    Computed Torque Controller without Inverse Kinematics
+    </description>
+  </class>
+
   <class name="arm_controllers/AdaptiveImpedanceController" type="arm_controllers::AdaptiveImpedanceController" base_class_type="controller_interface::ControllerBase">
+    <description>
+	    Adaptive Impedance Controller
+    </description>
+  </class>
+
+  <class name="arm_controllers/AdmittanceController" type="arm_controllers::AdmittanceController" base_class_type="controller_interface::ControllerBase">
+    <description>
+	    Adaptive Impedance Controller
+    </description>
+  </class>
+  <class name="arm_controllers/ForceController" type="arm_controllers::ForceController" 
+base_class_type="controller_interface::ControllerBase">
     <description>
 	    Adaptive Impedance Controller
     </description>
@@ -35,5 +53,14 @@
       Passivity Based Controller
     </description>
   </class>
+
+
+  <class name="arm_controllers/test" type="arm_controllers::test" base_class_type="controller_interface::ControllerBase">
+    <description>
+	    Gravity Compensation Controller
+    </description>
+  </class>
+
+
 </library>
 
