@@ -45,7 +45,7 @@ If you want to use motion controller in task space, then you may choose this con
     $ roslaunch elfin_launch elfin_motion_control.launch
     (2nd option: Motion control without inverse kinematics)
     
-    How they works?
+    How they work?
         - You need to specify the goal for the robot to move there by publishing the goal location to          
         /elfin/controller_name/command topic
         
