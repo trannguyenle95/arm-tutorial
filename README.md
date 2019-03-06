@@ -52,7 +52,10 @@ If you want to use motion controller in task space, then you may choose this con
         - We have already made a trajectory publisher that publish a trajectory in y-axis to the mentioned topic.
         $ cd ~/catkin_ws/src
         $ git clone https://github.com/trannguyenle95/trajectory.git
+        $ cd ~/catkin_ws/
+        $ catkin_make
         $ rosrun trajectory trajectory 
+        
         Robot should move now !!
         
 If you want to use motion and force controller in task space, then you may choose this controllers as follows:
@@ -71,12 +74,12 @@ If you want to use motion and force controller in task space, then you may choos
                 $ Add: /elfin/force_controller/publish_force/data[4] (Real force value measured at EE)
                        /elfin/force_controller/publish_force/data[5] (Desired force value)
              - To change the reference force value. Please change the value of this element:
-                       /elfin/force_controller/force_gains/data[3] (Refernce force value)
+                       /elfin/force_controller/force_gains/data[3] (Reference force value)
                 You can simply change it using rostopic pub or using rqt_ez_publisher
                 $ rosrun rqt_ez_publisher rqt_ez_publisher    
            
 ### Tip
- If you face the problems such as robot collapses, robot behaves weird when it touch the table (force-related controller),    please do:
+ If you face the problems such as robot collapses, robot behaves weird when it touches the table (force-related controller),    please do:
  
     $ cd ~/catkin_ws
     $ catkin_make clean
